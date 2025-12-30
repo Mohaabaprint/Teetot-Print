@@ -2,6 +2,10 @@
 export type Category = 'Apparel' | 'Accessories' | 'Business' | 'Gifts';
 export type DesignCategory = 'T-Shirt' | 'Caps' | 'Tote Bags' | 'Pillow Cases' | 'Mixed';
 
+export interface FeatureItem { title: string; desc: string; }
+export interface ProcessStep { step: string; title: string; desc: string; }
+export interface FAQItem { q: string; a: string; }
+
 export interface Product {
   id: string;
   name: string;
@@ -45,10 +49,16 @@ export interface SiteSettings {
   contactPhone: string;
   contactEmail: string;
   location: string;
-  gradientIntensity: number;
+  tiktokUrl: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  footerAboutText: string;
   showTestimonials: boolean;
   showFAQ: boolean;
   showFeatures: boolean;
+  features: FeatureItem[];
+  process: ProcessStep[];
+  faqs: FAQItem[];
   metaTitle: string;
   metaDescription: string;
 }
@@ -84,10 +94,6 @@ export const resolveImageUrl = (url: string): string => {
   return trimmedUrl;
 };
 
-/**
- * Optimized image utility. 
- * Updated to use image/png to preserve transparency for POD assets.
- */
 export const optimizeImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -99,20 +105,15 @@ export const optimizeImage = (file: File): Promise<string> => {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const MAX_DIM = 1200; // Slightly smaller for storage efficiency
+        const MAX_DIM = 1200;
         if (width > height) { if (width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } }
         else { if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; } }
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject('Canvas context not found');
-        
-        // Ensure transparency is cleared before drawing
         ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        
-        // Use image/png to keep transparency. 
-        // Note: browser storage is limited (~5MB), so we optimize dimensions.
         const dataUrl = canvas.toDataURL('image/png');
         resolve(dataUrl);
       };
