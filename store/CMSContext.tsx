@@ -25,64 +25,41 @@ interface CMSContextType {
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
-// STABLE KEYS - CRITICAL: DO NOT CHANGE THESE TO PRESERVE USER DATA ACROSS UPDATES
+// STABLE KEYS - V3 for clean persistence and detailed order tracking
 const STORAGE_KEYS = {
-  PRODUCTS: 'teetot_products_v2',
-  DESIGNS: 'teetot_designs_v2',
-  ORDERS: 'teetot_orders_v2',
-  SETTINGS: 'teetot_settings_v2',
-  CART: 'teetot_cart_v2'
+  PRODUCTS: 'teetot_products_v3',
+  DESIGNS: 'teetot_designs_v3',
+  ORDERS: 'teetot_orders_v3',
+  SETTINGS: 'teetot_settings_v3',
+  CART: 'teetot_cart_v3'
+};
+
+const safeJsonParse = (key: string, fallback: any) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (e) {
+    console.error(`Failed to parse ${key}:`, e);
+    return fallback;
+  }
 };
 
 export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
-
-  const [designAssets, setDesignAssets] = useState<DesignAsset[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.DESIGNS);
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
-  });
-  
-  const [settings, setSettings] = useState<SiteSettings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
-  });
-  
+  const [products, setProducts] = useState<Product[]>(() => safeJsonParse(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS));
+  const [designAssets, setDesignAssets] = useState<DesignAsset[]>(() => safeJsonParse(STORAGE_KEYS.DESIGNS, []));
+  const [orders, setOrders] = useState<Order[]>(() => safeJsonParse(STORAGE_KEYS.ORDERS, INITIAL_ORDERS));
+  const [settings, setSettings] = useState<SiteSettings>(() => safeJsonParse(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
   const [inquiries, setInquiries] = useState<QuoteInquiry[]>([]);
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CART);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [cart, setCart] = useState<CartItem[]>(() => safeJsonParse(STORAGE_KEYS.CART, []));
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DESIGNS, JSON.stringify(designAssets));
-  }, [designAssets]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-  }, [orders]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
-  }, [cart]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.DESIGNS, JSON.stringify(designAssets)); }, [designAssets]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders)); }, [orders]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart)); }, [cart]);
 
   const resetStorage = () => {
-    if (confirm("Reset all site data to default? This will delete all custom products, designs, and orders.")) {
+    if (confirm("Reset all site data? This will clear custom uploads and orders.")) {
       Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
       window.location.reload();
     }
@@ -90,7 +67,6 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addToCart = (productId: string, qty: number, designUrl?: string, size?: string, designScale?: number, designX?: number, designY?: number) => {
     setCart(prev => {
-      // Find item with same configuration
       const existing = prev.find(item => 
         item.productId === productId && 
         item.designUrl === designUrl && 
@@ -135,11 +111,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <CMSContext.Provider value={{ 
-      products, setProducts, 
-      designAssets, setDesignAssets,
-      orders, setOrders, 
-      settings, setSettings,
-      inquiries, setInquiries,
+      products, setProducts, designAssets, setDesignAssets,
+      orders, setOrders, settings, setSettings, inquiries,
       cart, addToCart, removeFromCart, updateCartQty, clearCart, submitOrder, resetStorage
     }}>
       {children}

@@ -9,6 +9,11 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error("Global Error Captured:", message, "at", source, lineno, colno);
+};
+
 root.render(
   <React.StrictMode>
     <App />
