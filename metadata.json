@@ -1,0 +1,8 @@
+{
+  "name": "TeetotPrint - Premium POD & Custom Printing",
+  "description": "A high-performance, dark-themed e-commerce platform for print-on-demand services, featuring a custom admin CMS, product management, and order tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
